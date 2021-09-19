@@ -15,13 +15,15 @@ class Test {
 	public $polygon;
 	public $precision;
 	public $expectedResult;
+	public $debuggingOn;
 
-	public function __construct($name, $polygon, $expectedResult, $precision = 1.0) {
+	public function __construct($name, $polygon, $expectedResult, $precision = 1.0, $debuggingOn = false) {
 
 		$this->name = $name;
 		$this->polygon = $polygon;
 		$this->precision = $precision;
 		$this->expectedResult = $expectedResult;
+		$this->debuggingOn = $debuggingOn;
 
 	}
 
@@ -29,11 +31,11 @@ class Test {
 
 		echo 'Testing ' . $this->name . "<br>\n";
 
-		$result = polylabel($this->polygon, $this->precision, function($debugOutput) {
+		$result = polylabel($this->polygon, $this->precision, $this->debuggingOn ? function($debugOutput) {
 
 			echo "\tdebug: " . $debugOutput . "<br>\n";
 
-		});
+		} : null);
 
 		if( $result !== $this->expectedResult ) {
 
