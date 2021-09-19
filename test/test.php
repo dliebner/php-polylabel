@@ -75,6 +75,8 @@ $tests = [
 		'distance' => 960.5
 	]),
 	new Test('works on degenerate polygons', json_decode('[[[0, 0], [1, 0], [2, 0], [0, 0]]]'), [
+		'x' => 0,
+		'y' => 0,
 		'distance' => 0
 	])
 ];
