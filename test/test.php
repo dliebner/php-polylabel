@@ -20,6 +20,7 @@ class Test {
 
 		$this->name = $name;
 		$this->polygon = $polygon;
+		$this->precision = $precision;
 		$this->expectedResult = $expectedResult;
 
 	}
@@ -65,7 +66,7 @@ $tests = [
 		'x' => 3854.296875,
 		'y' => 2123.828125,
 		'distance' => 278.5795872381558
-	]),
+	], 50),
 	new test('finds pole of inaccessibility for water2 and default precision 1', $water2, [
 		'x' => 3263.5,
 		'y' => 3263.5,
