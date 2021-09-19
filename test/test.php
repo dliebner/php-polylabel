@@ -28,7 +28,11 @@ class Test {
 
 		echo 'Testing ' . $this->name . "<br>\n";
 
-		$result = polylabel($this->polygon, $this->precision);
+		$result = polylabel($this->polygon, $this->precision, function($debugOutput) {
+
+			echo "\tdebug: " . $debugOutput . "<br>\n";
+
+		});
 
 		if( $result !== $this->expectedResult ) {
 
