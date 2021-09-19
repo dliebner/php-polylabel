@@ -26,6 +26,8 @@ class Test {
 
 	public function test() {
 
+		echo 'Testing ' . $this->name . "<br>\n";
+
 		$result = polylabel($this->polygon, $this->precision);
 
 		if( $result !== $this->expectedResult ) {
@@ -37,13 +39,13 @@ class Test {
 				'expectedResult' => $this->expectedResult
 			], true));
 
-			echo '<br>';
-
 		} else {
 
-			echo $this->name . ' passed.<br>';
+			echo $this->name . ' passed.';
 
 		}
+
+		echo "<br><br>\n\n";
 
 	}
 
