@@ -202,9 +202,11 @@ function getSegDistSq($px, $py, $a, $b) {
     $dx = $b[0] - $x;
     $dy = $b[1] - $y;
 
-    if( $dx > 0 || $dy > 0 ) {
+	$denom = $dx * $dx + $dy * $dy;
 
-        $t = (($px - $x) * $dx + ($py - $y) * $dy) / ($dx * $dx + $dy * $dy);
+    if( $denom > 0 ) {
+
+        $t = (($px - $x) * $dx + ($py - $y) * $dy) / $denom;
 
         if( $t > 1 ) {
 
