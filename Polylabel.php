@@ -9,7 +9,7 @@ class CellQueue {
     public function __construct() {
 
 		$this->splPriorityQueue = new \SplPriorityQueue();
-		
+
 	}
 
 	public function push(Cell $cell) {
@@ -30,8 +30,8 @@ class CellQueue {
 		return $this->splPriorityQueue->extract();
 
 	}
-	
-} 
+
+}
 
 function polylabel($polygon, $precision = 1.0, $debugCallback = null) {
 
@@ -112,7 +112,7 @@ function polylabel($polygon, $precision = 1.0, $debugCallback = null) {
         $debugCallback('num probes: ' . $numProbes);
         $debugCallback('best distance: ' . $bestCell->d);
     }
-	
+
 	return [
 		'x' => $bestCell->x,
 		'y' => $bestCell->y,
@@ -136,7 +136,7 @@ class Cell {
 		$this->h = $h; // half the cell size
 		$this->d = pointToPolygonDist($x, $y, $polygon);
 		$this->max = $this->d + $this->h * M_SQRT2;
-		
+
 	}
 
 }
@@ -202,7 +202,7 @@ function getSegDistSq($px, $py, $a, $b) {
     $dx = $b[0] - $x;
     $dy = $b[1] - $y;
 
-    if( $dx > 0 || $dy > 0 ) {
+    if( $dx != 0 || $dy != 0 ) {
 
         $t = (($px - $x) * $dx + ($py - $y) * $dy) / ($dx * $dx + $dy * $dy);
 
