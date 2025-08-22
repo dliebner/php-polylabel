@@ -35,23 +35,25 @@ class CellQueue {
 
 function polylabel($polygon, $precision = 1.0, $debugCallback = null) {
 
+    $minX = $minY = INF;
+    $maxX = $maxY = -INF;
+
     // find the bounding box of the outer ring
 	for( $i = 0; $i < count($polygon[0]); $i++ ) {
 
 		$p = $polygon[0][$i];
-		if( !$i || $p[0] < $minX ) $minX = $p[0];
-		if( !$i || $p[1] < $minY ) $minY = $p[1];
-		if( !$i || $p[0] > $maxX ) $maxX = $p[0];
-		if( !$i || $p[1] > $maxY ) $maxY = $p[1];
+		if( $p[0] < $minX ) $minX = $p[0];
+		if( $p[1] < $minY ) $minY = $p[1];
+		if( $p[0] > $maxX ) $maxX = $p[0];
+		if( $p[1] > $maxY ) $maxY = $p[1];
 
 	}
 
 	$width = $maxX - $minX;
 	$height = $maxY - $minY;
-	$cellSize = min($width, $height);
-	$h = $cellSize / 2;
+	$cellSize = max($precision, min($width, $height));
 
-	if( $cellSize === 0 ) {
+	if( $cellSize == $precision ) {
 
 		return [
 			'x' => $minX,
@@ -64,14 +66,6 @@ function polylabel($polygon, $precision = 1.0, $debugCallback = null) {
     // a priority queue of cells in order of their "potential" (max distance to polygon)
 	$cellQueue = new CellQueue();
 
-    // cover polygon with initial cells
-    for( $x = $minX; $x < $maxX; $x += $cellSize ) {
-        for( $y = $minY; $y < $maxY; $y += $cellSize ) {
-			$cellQueue->push(new Cell($x + $h, $y + $h, $h, $polygon));
-
-        }
-    }
-
     // take centroid as the first best guess
     $bestCell = getCentroidCell($polygon);
 
@@ -79,32 +73,44 @@ function polylabel($polygon, $precision = 1.0, $debugCallback = null) {
     $bboxCell = new Cell($minX + $width / 2, $minY + $height / 2, 0, $polygon);
     if( $bboxCell->d > $bestCell->d) $bestCell = $bboxCell;
 
-    $numProbes = $cellQueue->length();
+    $numProbes = 2;
+
+    $potentiallyQueue = function($x, $y, $h) use ($precision, $debugCallback, $polygon, &$bestCell, &$numProbes, $cellQueue) {
+
+        $cell = new Cell($x, $y, $h, $polygon);
+        $numProbes++;
+        if( $cell->max > $bestCell->d + $precision ) $cellQueue->push( $cell );
+
+        // update the best cell if we found a better one
+        if( $cell->d > $bestCell->d ) {
+            $bestCell = $cell;
+            if( $debugCallback ) $debugCallback( sprintf('found best %f after %d probes', round(1e4 * $cell->d) / 1e4, $numProbes) );
+        }
+
+    };
+
+    // cover polygon with initial cells
+    $h = $cellSize / 2;
+    for( $x = $minX; $x < $maxX; $x += $cellSize ) {
+        for( $y = $minY; $y < $maxY; $y += $cellSize ) {
+			$potentiallyQueue($x + $h, $y + $h, $h);
+        }
+    }
 
     while( $cellQueue->length() ) {
 
         // pick the most promising cell from the queue
         $cell = $cellQueue->pop();
 
-        // update the best cell if we found a better one
-        if( $cell->d > $bestCell->d ) {
-
-            $bestCell = $cell;
-
-            if( $debugCallback ) $debugCallback( sprintf('found best %f after %d probes', round(1e4 * $cell->d) / 1e4, $numProbes) );
-
-        }
-
         // do not drill down further if there's no chance of a better solution
-        if( $cell->max - $bestCell->d <= $precision ) continue;
+        if( $cell->max - $bestCell->d <= $precision ) break;
 
         // split the cell into four cells
         $h = $cell->h / 2;
-        $cellQueue->push(new Cell($cell->x - $h, $cell->y - $h, $h, $polygon));
-        $cellQueue->push(new Cell($cell->x + $h, $cell->y - $h, $h, $polygon));
-        $cellQueue->push(new Cell($cell->x - $h, $cell->y + $h, $h, $polygon));
-        $cellQueue->push(new Cell($cell->x + $h, $cell->y + $h, $h, $polygon));
-        $numProbes += 4;
+        $potentiallyQueue($cell->x - $h, $cell->y - $h, $h);
+        $potentiallyQueue($cell->x + $h, $cell->y - $h, $h);
+        $potentiallyQueue($cell->x - $h, $cell->y + $h, $h);
+        $potentiallyQueue($cell->x + $h, $cell->y + $h, $h);
 
     }
 
@@ -165,7 +171,7 @@ function pointToPolygonDist( $x, $y, $polygon ) {
 
     }
 
-    return $minDistSq === 0 ? 0 : ($inside ? 1 : -1) * sqrt($minDistSq);
+    return $minDistSq == 0 ? 0 : ($inside ? 1 : -1) * sqrt($minDistSq);
 
 }
 
@@ -188,9 +194,15 @@ function getCentroidCell($polygon) {
 
     }
 
-    if( $area === 0 ) return new Cell($points[0][0], $points[0][1], 0, $polygon);
+    // Create the fallback cell from the first vertex
+    $fallbackCell = new Cell($points[0][0], $points[0][1], 0, $polygon);
+    if( !$area ) return $fallbackCell;
 
-    return new Cell($x / $area, $y / $area, 0, $polygon);
+    $centroid = new Cell($x / $area, $y / $area, 0, $polygon);
+
+    if( $centroid->d < 0 ) return $fallbackCell;
+
+    return $centroid;
 
 }
 
